@@ -7,7 +7,15 @@ app = Flask(__name__)
 headings = ("Name","Album","Artist")
 df1 = music_rec()
 df1 = df1.head(15)
-@app.route('/')
+
+df2=movie_rec()
+df2=df2.head(15)
+@app.route('/home')
+def home():
+    return render_template('home.html')
+
+
+@app.route('/music')
 def index():
     print(df1.to_json(orient='records'))
     return render_template('index.html', headings=headings, data=df1)
@@ -15,7 +23,7 @@ def index():
 def gen(camera):
     while True:
         global df1
-        frame, df1 = camera.get_frame()
+        frame, df1,df2 = camera.get_frame()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
 
@@ -24,9 +32,21 @@ def video_feed():
     return Response(gen(VideoCamera()),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
+
+
+@app.route('/movies')
+def movie():
+    print(df2.to_json(orient='records'))
+    return render_template('movies.html', headings=headings, data=df2)
+    
 @app.route('/t')
 def gen_table():
     return df1.to_json(orient='records')
+
+
+@app.route('/tep')
+def gen_table2():
+    return df2.to_json(orient='records')
 
 if __name__ == '__main__':
     app.debug = True

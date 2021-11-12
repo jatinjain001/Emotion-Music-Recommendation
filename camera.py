@@ -37,6 +37,7 @@ cv2.ocl.setUseOpenCL(False)
 
 emotion_dict = {0:"Angry",1:"Disgusted",2:"Fearful",3:"Happy",4:"Neutral",5:"Sad",6:"Surprised"}
 music_dist={0:"songs/angry.csv",1:"songs/disgusted.csv ",2:"songs/fearful.csv",3:"songs/happy.csv",4:"songs/neutral.csv",5:"songs/sad.csv",6:"songs/surprised.csv"}
+movie_dist={0:"movies/angry.csv",1:"movies/disgust.csv ",2:"movies/fear.csv",3:"movies/enjoyment.csv",4:"movies/neutral.csv",5:"movies/sad.csv",6:"movies/surprised.csv"}
 global last_frame1                                    
 last_frame1 = np.zeros((480, 640, 3), dtype=np.uint8)
 global cap1 
@@ -106,6 +107,7 @@ class VideoCamera(object):
 	def get_frame(self):
 		global cap1
 		global df1
+		global df2
 		cap1 = WebcamVideoStream(src=0).start()
 		image = cap1.read()
 		image=cv2.resize(image,(600,500))
@@ -114,6 +116,9 @@ class VideoCamera(object):
 		df1 = pd.read_csv(music_dist[show_text[0]])
 		df1 = df1[['Name','Album','Artist']]
 		df1 = df1.head(15)
+		df2 = pd.read_csv(movie_dist[show_text[0]])
+		df2=df2[['Name']]
+		df2=df2.head(15)
 		for (x,y,w,h) in face_rects:
 			cv2.rectangle(image,(x,y-50),(x+w,y+h+10),(0,255,0),2)
 			roi_gray_frame = gray[y:y + h, x:x + w]
@@ -126,6 +131,7 @@ class VideoCamera(object):
 			#print(df1)
 			cv2.putText(image, emotion_dict[maxindex], (x+20, y-60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 			df1 = music_rec()
+			df2=movie_rec()
 			
 		global last_frame1
 		last_frame1 = image.copy()
@@ -133,7 +139,7 @@ class VideoCamera(object):
 		img = Image.fromarray(last_frame1)
 		img = np.array(img)
 		ret, jpeg = cv2.imencode('.jpg', img)
-		return jpeg.tobytes(), df1
+		return jpeg.tobytes(), df1 ,df2
 
 def music_rec():
 	# print('---------------- Value ------------', music_dist[show_text[0]])
@@ -141,3 +147,9 @@ def music_rec():
 	df = df[['Name','Album','Artist']]
 	df = df.head(15)
 	return df
+
+def movie_rec():
+	d=pd.read_csv(movie_dist[show_text[0]],error_bad_lines=False)
+	d=d[['Name']]
+	d=d.head(15)
+	return d
